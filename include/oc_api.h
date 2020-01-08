@@ -151,11 +151,30 @@ typedef struct
 
 typedef void (*oc_init_platform_cb_t)(void *data);
 /**
- * Callback invoked when a device has been added to the stack
+ * Callback invoked during oc_add_device(). The purpose is to add any additional
+ * device properties that are not supplied to oc_add_device() function call.
  *
- * @param data context pointer that comes from the oc_add_device function
+ * Example:
+ * ```
+ * static void set_device_custom_property(void *data)
+ * {
+ *   (void)data;
+ *   oc_set_custom_device_property(purpose, "desk lamp");
+ * }
+ *
+ * static int app_init(void)
+ * {
+ *   int ret = oc_init_platform("My Platform", NULL, NULL);
+ *   ret |= oc_add_device("/oic/d", "oic.d.light", "My light", "ocf.1.0.0",
+ *                        "ocf.res.1.0.0", set_device_custom_property, NULL);
+ *   return ret;
+ * }
+ * ```
+ *
+ * @param data context pointer that comes from the oc_add_device() function
  *
  * @see oc_add_device
+ * @see oc_set_custom_device_property
  */
 typedef void (*oc_add_device_cb_t)(void *data);
 
