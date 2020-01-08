@@ -250,7 +250,7 @@ void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
  *            by every server. Used to device specific information.
  * @param rt the resource type
  * @param name the user readable name of the device
- * @param spec_version The version of the OIC Server.  This is the "icv" device
+ * @param spec_version The version of the OCF Server.  This is the "icv" device
  *                     property
  * @param data_model_version Spec version of the resource and device
  * specifications to which this device data model is implemtned. This is the
