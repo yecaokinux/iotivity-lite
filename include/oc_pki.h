@@ -39,17 +39,67 @@ typedef enum {
   OC_SP_PURPLE = 1 << 4    ///< The OCF Purple Security Profile
 } oc_sp_types_t;
 
+/**
+ * Add the manufactures PKI identity certificate.
+ *
+ *
+ * @param[in] device the device number the identity certificate belongs to
+ * @param[in] cert pointer to a byte array containing a PEM encoded identity
+ *                 certificate
+ * @param[in] cert_size the size of the `cert` byte array
+ * @param[in] key the PEM encoded private key used to sign the identity
+ *                certificate
+ * @param[in] key_size the size of the `key` byte array
+ *
+ * @return
+ *  - the credential ID of the identity certificate on success
+ *  - `-1` on failure
+ */
 int oc_pki_add_mfg_cert(size_t device, const unsigned char *cert,
                         size_t cert_size, const unsigned char *key,
                         size_t key_size);
 
+/**
+ * Add an intermediate manufacture CA certificate.
+ *
+ * @param[in] device the device number the certificate chain belongs to
+ * @param[in] credid the credential ID of the child certificate
+ * @param[in] cert pointer to a byte array containing a PEM encoded certificate
+ * @param[in] cert_size the size of the `cert` byte array
+ *
+ * @return
+ *   - the credential ID of the intermediate CA certificate on success
+ *   - `-1` on failure
+ */
 int oc_pki_add_mfg_intermediate_cert(size_t device, int credid,
                                      const unsigned char *cert,
                                      size_t cert_size);
 
+/**
+ * Add manufacture trust anchor CA
+ *
+ * @param[in] device the device number the trust anchor CA belongs to
+ * @param[in] cert pointer to a byte array containing a PEM encoded certificate
+ * @param[in] cert_size the size of the `cert` byte array
+ *
+ * @return
+ *  - the credential ID of the trust anchor CA
+ *  - `-1` on failure
+ */
 int oc_pki_add_mfg_trust_anchor(size_t device, const unsigned char *cert,
                                 size_t cert_size);
 
+/**
+ * Add trust anchor CA
+ *
+ * @param[in] device the device number the trust anchor CA belongs to
+ * @param[in] cert pointer to a byte array containing a PEM encoded certificate
+ * @param[in] cert_size the size of the `cert` byte array
+ *
+ * @return
+ *  - the credential ID of the trust anchor CA
+ *  - `-1` on failure
+ */
 int oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
                             size_t cert_size);
 
