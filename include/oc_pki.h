@@ -13,9 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+
 /**
-  @file
-*/
+ * @file
+ *
+ * OCF public key infrastructure (PKI) functions
+ *
+ * Collection of functions used to add public key infrastructure (PKI)
+ * certification chains for devices as well as to set devices OCF defined
+ * security profile.
+ */
 #ifndef OC_PKI_H
 #define OC_PKI_H
 
