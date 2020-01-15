@@ -49,10 +49,6 @@ typedef enum {
 /**
  * Add the manufactures PKI identity certificate.
  *
- * @note The private key doesn't sign the identity certificate. Rather it is
- * the key associated with the public key encoded in the certificate. This
- * certificate itself is usually signed by the intermediate CA's private key.
- *
  * @param[in] device index of the logical device the identity certificate
  *                   belongs to
  * @param[in] cert pointer to a string containing a PEM encoded identity
