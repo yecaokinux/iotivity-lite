@@ -560,12 +560,44 @@ void oc_reset();
  */
 void oc_reset_device(size_t device);
 
-/** Server side */
+/* Server side */
 /**
   @defgroup doc_module_tag_server_side Server side
   Optional group of functions OCF server support.
   @{
 */
+/**
+ * Allocate and populate a new oc_resource_t.
+ *
+ * Resources are the primary interface between code and real world devices.
+ *
+ * Each resource has a Uniform Resource Identifier (URI) that identifies it.
+ * All resources **must** specify one or more Resource Types to considered a
+ * valid resource. The number of resources is specified by the
+ * `num_resource_types` the actual Resource Types are added later using the
+ * oc_resoruce_bind_resource_type() function.
+ *
+ * The resource is populated with a default interface OC_IF_BASELINE.
+ *
+ * Many properties associated with a resource are set or modified after the
+ * new resource has been created.
+ *
+ * The resource is not added to the device till oc_add_resource() is called.
+ *
+ * @param[in] name the name of the new resource this will set the property `n`
+ * @param[in] uri the Uniform Resource Identifier for the resource
+ * @param[in] num_resource_types the number of resource types that will be
+ *                               added/bound to the resource
+ * @param[in] device index of the logical device the resource will be added to
+ *
+ * @see oc_resource_bind_resource_interface
+ * @see oc_resource_set_default_interface
+ * @see oc_resource_bind_resource_type
+ * @see oc_process_baseline_interface
+ * @see oc_resource_set_discoverable
+ * @see oc_resource_set_periodic_observable
+ * @see oc_resource_set_request_handler
+ */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
