@@ -253,14 +253,13 @@ oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
 
 /**
- * Callback invoked during stack initialization as part of the provisioning
- * status.
+ * Callback invoked by the stack initialization to perform any
+ * "factory settings", e.g., this may be used to load a manufacturer
+ * certificate.
  *
- * Callback is used to add manufacture certificates to the device.
- *
- * The following example shows adding a manufacture's identity certificate and
- * public key certificate. The signing chain for the certificates are also
- * provided.
+ * The following example illustrates the method of loading a manufacturer
+ * certificate chain (end-entity certificate, intermediate CA certificate, and
+ * root CA certificate) using oc_pki_xxx APIs.
  *
  * Example:
  * ```
@@ -324,7 +323,7 @@ void oc_main_shutdown(void);
  * ```
  * @param[in] device number of the device
  * @param[in] data context pointer that comes from the
- * oc_set_factory_presets_cb() function
+ *                 oc_set_factory_presets_cb() function
  *
  * @see oc_set_factory_presets_cb
  * @see oc_pki_add_mfg_cert
@@ -338,13 +337,12 @@ typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
  * Set the factory presets callback.
  *
  * The factory presets callback is called by the stack to enable per-device
- * presets regarding manufacture certificates.
+ * presets.
  *
  * @note oc_set_factory_presets_cb() must be called before oc_main_init().
  *
- * @note the oc_factory_presets_cb_t is called when checking the provisioning
- * status (oic.sec.pstat). If the OC_SECURITY is not specified in the build the
- * callback will not be invoked.
+ * @note If the OC_SECURITY is not defined the oc_factory_presets_cb_t callback
+ *       will not be invoked.
  *
  * @param[in] cb oc_factory_presets_cb_t function pointer to be called
  * @param[in] data context pointer that is passed to the oc_factory_presets_cb_t
@@ -431,7 +429,7 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
  * @param[in] init_platform_cb callback function invoked during
  * oc_init_platform(). The purpose is to add additional device properties that
  * are not supplied to oc_init_platform() function call.
- * @param data context pointer that is passed to the oc_init_platform_cb_t
+ * @param[in] data context pointer that is passed to the oc_init_platform_cb_t
  *
  * @return
  *   - `0` on success
@@ -464,11 +462,15 @@ typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
 void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
-  @brief Returns whether the oic.wk.con res is announced.
-  @return true if announced (default) or false if not
-  @see oc_set_con_res_announced
-  @see oc_set_con_write_cb
-*/
+ * Returns whether the oic.wk.con resource is advertised.
+ *
+ * @return
+ *  - true if advertised (default)
+ *  - false if not
+ *
+ * @see oc_set_con_res_announced
+ * @see oc_set_con_write_cb
+ */
 bool oc_get_con_res_announced(void);
 
 /**
