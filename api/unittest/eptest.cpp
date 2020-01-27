@@ -230,51 +230,69 @@ TEST(OCEndpoints, EndpointStringParsePath)
                          "coap://0/foo"};
   for (int i = 0; i < 12; i++) {
     oc_string_t s;
-    oc_new_string(&s, spu[i], strlen(spu[i]));
     oc_string_t path;
+    int ret = -1;
+    oc_new_string(&s, spu[i], strlen(spu[i]));
     memset(&path, 0, sizeof(oc_string_t));
-
-    int ret = oc_endpoint_string_parse_path(&s, &path);
-    EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
     switch (i) {
     case 0:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/a/light");
       break;
     case 1:
-      EXPECT_EQ(oc_string_len(path), 0);
-      EXPECT_STREQ(oc_string(path), "");
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
+      EXPECT_EQ(path.ptr, NULL);
       break;
     case 2:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/alpha");
       break;
     case 3:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/alpha");
       break;
     case 4:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/a/light");
       break;
     case 5:
-      EXPECT_EQ(oc_string_len(path), 0);
-      EXPECT_STREQ(oc_string(path), "");
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
+      EXPECT_EQ(path.ptr, NULL);
       break;
     case 6:
-      EXPECT_EQ(oc_string_len(path), 0);
-      EXPECT_STREQ(oc_string(path), "");
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
+      EXPECT_EQ(path.ptr, NULL);
       break;
     case 7:
-      EXPECT_EQ(oc_string_len(path), 0);
-      EXPECT_STREQ(oc_string(path), "");
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
+      EXPECT_EQ(path.ptr, NULL);
       break;
     case 8:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/a/light");
       break;
     case 9:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/a/light");
       break;
     case 10:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/a/light");
       break;
     case 11:
+      ret = oc_endpoint_string_parse_path(&s, &path);
+      EXPECT_EQ(0, ret) << "spu[" << i << "] " << spu[i];
       EXPECT_STREQ(oc_string(path), "/foo");
       break;
     default:

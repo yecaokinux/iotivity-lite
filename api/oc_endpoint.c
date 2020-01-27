@@ -526,16 +526,18 @@ oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
   const char *query_start = NULL;
 
   path_start = memchr(address, '/', len);
-  if (path_start) {
-    query_start = memchr((address + (path_start - address)), '?', (len - (path_start - address)));
-    if (query_start) {
-      oc_new_string(path, path_start, (query_start - path_start));
-    } else {
-      oc_new_string(path, path_start, (len - (path_start - address)));
-    }
+
+  if (!path_start) {
+    // no path found return error
+    return -1;
+  }
+
+  query_start = memchr((address + (path_start - address)), '?',
+                       (len - (path_start - address)));
+  if (query_start) {
+    oc_new_string(path, path_start, (query_start - path_start));
   } else {
-    // no path found return an empty string
-    oc_new_string(path, "", 0);
+    oc_new_string(path, path_start, (len - (path_start - address)));
   }
   return 0;
 }
