@@ -341,9 +341,6 @@ typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
  *
  * @note oc_set_factory_presets_cb() must be called before oc_main_init().
  *
- * @note If the OC_SECURITY is not defined the oc_factory_presets_cb_t callback
- *       will not be invoked.
- *
  * @param[in] cb oc_factory_presets_cb_t function pointer to be called
  * @param[in] data context pointer that is passed to the oc_factory_presets_cb_t
  *                 the pointer must be a valid point till after oc_main_init()
