@@ -496,9 +496,6 @@ typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
  *
  * @note This should be set before invoking oc_main_init().
  *
- * @note Use of this function requires building the stack with OC_SECURITY
- *       defined.
- *
  * @param[in] cb callback function invoked when client requests Random PIN OTM
  * @param[in] data context pointer that is passed to the oc_random_pin_cb_t the
  *                 context pointer must be a valid pointer as long as the device
