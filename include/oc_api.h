@@ -573,9 +573,9 @@ void oc_reset_device(size_t device);
  *
  * Each resource has a Uniform Resource Identifier (URI) that identifies it.
  * All resources **must** specify one or more Resource Types to be considered a
- * valid resource. The number of resources is specified by the
+ * valid resource. The number of Resource Types is specified by the
  * `num_resource_types` the actual Resource Types are added later using the
- * oc_resoruce_bind_resource_type() function.
+ * oc_resource_bind_resource_type() function.
  *
  * The resource is populated with a default interface OC_IF_BASELINE.
  *
@@ -603,7 +603,7 @@ void oc_reset_device(size_t device);
  *
  * @param[in] name the name of the new resource this will set the property `n`
  * @param[in] uri the Uniform Resource Identifier for the resource
- * @param[in] num_resource_types the number of resource types that will be
+ * @param[in] num_resource_types the number of Resource Types that will be
  *                               added/bound to the resource
  * @param[in] device index of the logical device the resource will be added to
  *
@@ -667,8 +667,7 @@ void oc_resource_bind_resource_interface(oc_resource_t *resource,
  * oc_resource_bind_resource_interface() function.
  *
  * If a request to the resource comes in and the interface is not specified
- * then the default interface will be used when deciding if the request can be
- * satisfied.
+ * then the default interface will be used to service the request.
  *
  * If the default interface is not set then the OC_IF_BASELINE will be used
  * by the stack.
@@ -706,14 +705,14 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 /**
- * Add a Resoruce Type "rt" property to the resource.
+ * Add a Resource Type "rt" property to the an /oic/d resource.
  *
- * This function can be used to add the Resource Type instead of using
- * oc_resource_bind_resource_type().
+ * This function can be used to bind a new Resource Type to a logical device's
+ * /oic/d resource.
  *
- * @param[in] device index of the logical device the Resource Type will be set
+ * @param[in] device index of a logical device
  * on
- * @param[in] type the Resource type to add to the Resoruce Type "rt" property
+ * @param[in] type the Resource type to add to the Resource Type "rt" property
  */
 void oc_device_bind_resource_type(size_t device, const char *type);
 
