@@ -204,6 +204,7 @@ get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
     oc_sec_encode_sp(request->resource->device);
     oc_send_response(request, OC_STATUS_OK);
