@@ -711,7 +711,6 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  * /oic/d resource.
  *
  * @param[in] device index of a logical device
- * on
  * @param[in] type the Resource type to add to the Resource Type "rt" property
  */
 void oc_device_bind_resource_type(size_t device, const char *type);
@@ -909,13 +908,12 @@ bool oc_collections_add_rt_factory(const char *rt,
 /** @} */ // end of doc_module_tag_collections
 
 /**
- * Make it possible to access the resource and its properties using insecure
- * communication.
+ * Expose unsecured coap:// endpoints (in addition to secured coaps://
+ * endpoints) for this resource in /oic/res.
  *
- * @note this is use to make many core resources available before OCF security
- *       has been fully enabled.  Unless the developer has a very clear need to
- *       make a resource public, this function is not recommended for most
- *       resources.
+ * @note While the resource may advertise unsecured endpoints, the resource
+ *       shall remain inaccessible until the hosting device is configured with
+ *       an anon-clear Access Control Entry (ACE).
  *
  * @param[in] resource the resource to make public
  *
@@ -924,7 +922,7 @@ bool oc_collections_add_rt_factory(const char *rt,
 void oc_resource_make_public(oc_resource_t *resource);
 
 /**
- * Specify if a resource can be found using OFC discover mechanisms.
+ * Specify if a resource can be found using OCF discover mechanisms.
  *
  * @param[in] resource to specify as discoverable or non-discoverable
  * @param[in] state if true the resource will be discoverable if false the
@@ -951,10 +949,8 @@ void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 void oc_resource_set_observable(oc_resource_t *resource, bool state);
 
 /**
- * The resource will periodically notify clients of is property values.
- *
- * In addition this will also set up a client to notify clients when a property
- * has been modified.
+ * The resource will periodically notify observing clients of is property
+ * values.
  *
  * The oc_resource_set_observable() function can be used to turn off a periodic
  * observable resource.
@@ -1034,7 +1030,7 @@ bool oc_add_resource(oc_resource_t *resource);
  * @param[in] resource the resource to delete
  *
  * @return
- *  - true: when the resource had been deleted and memory freed.
+ *  - true: when the resource has been deleted and memory freed.
  *  - false: there was an issue deleting the resource.
  */
 bool oc_delete_resource(oc_resource_t *resource);
