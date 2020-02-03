@@ -12,6 +12,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
