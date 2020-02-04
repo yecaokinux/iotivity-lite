@@ -112,7 +112,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
+SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(CREATE),1)
@@ -331,6 +331,10 @@ simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+introspectionclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/introspectionclient.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/introspectionclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_collections_linux.c
 	@mkdir -p $@_creds

@@ -63,6 +63,10 @@ oc_core_introspection_data_handler(oc_request_t *request,
 
   OC_DBG("in oc_core_introspection_data_handler");
 
+  printf("######\n");
+  printf("in oc_core_introspection_data_handler\n");
+  printf("######\n");
+
   long IDD_size = 0;
 #ifndef OC_IDD_API
   if (introspection_data_size < OC_MAX_APP_DATA_SIZE) {
@@ -75,17 +79,18 @@ oc_core_introspection_data_handler(oc_request_t *request,
 #else  /* OC_IDD_API */
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", request->resource->device, idd_tag);
-  IDD_size = oc_storage_read(
-    idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
+  IDD_size =
+    oc_storage_read(idd_tag, request->response->response_buffer->buffer,
+                    oc_get_max_app_data_size());
 #endif /* OC_IDD_API */
 
-  if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
+  if (IDD_size >= 0 && IDD_size < oc_get_max_app_data_size()) {
     request->response->response_buffer->response_length = (uint16_t)IDD_size;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     OC_ERR(
       "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
-      IDD_size, OC_MAX_APP_DATA_SIZE);
+      IDD_size, oc_get_max_app_data_size());
     request->response->response_buffer->response_length = (uint16_t)0;
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
@@ -97,7 +102,9 @@ oc_core_introspection_wk_handler(oc_request_t *request,
                                  oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
-
+  printf("######\n");
+  printf("in oc_core_introspection_wk_handler\n");
+  printf("######\n");
   int interface_index =
     (request->origin) ? request->origin->interface_index : -1;
   enum transport_flags conn =
@@ -159,6 +166,7 @@ oc_create_introspection_resource(size_t device)
     OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
     OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_SECURE | OC_DISCOVERABLE,
     oc_core_introspection_wk_handler, 0, 0, 0, 1, "oic.wk.introspection");
+
   oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
                             OC_IF_BASELINE, OC_IF_BASELINE, 0,
                             oc_core_introspection_data_handler, 0, 0, 0, 1,

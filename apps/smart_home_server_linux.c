@@ -1446,6 +1446,11 @@ app_init(void)
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
+#if defined(OC_IDD_API)
+  oc_set_introspection_data(0, smart_home_introspection_data,
+                            smart_home_introspection_data_size);
+#endif
+
   if (err >= 0) {
     oc_uuid_t my_uuid;
     oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
@@ -1923,11 +1928,6 @@ register_resources(void)
                                  set_platform_properties, NULL);
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
-
-#if defined(OC_IDD_API)
-  oc_set_introspection_data(0, smart_home_introspection_data,
-                            smart_home_introspection_data_size);
-#endif
 }
 
 static void
@@ -2072,7 +2072,7 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-  oc_set_max_app_data_size(16384);
+  oc_set_max_app_data_size(262144);
 
 #ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
