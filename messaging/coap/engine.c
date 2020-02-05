@@ -569,8 +569,8 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_CLIENT */
 
       if (message->type == COAP_TYPE_CON) {
-        coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0,
-                                 0, &msg->endpoint);
+        coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0, 0,
+                                 &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
       } else if (message->type == COAP_TYPE_RST) {
 #ifdef OC_SERVER
@@ -798,16 +798,15 @@ send_message:
             i += sizeof(r);
           }
           response->token_len = (uint8_t)i;
-            if (request_buffer) {
-              memcpy(request_buffer->token, response->token,
-                     response->token_len);
-              request_buffer->token_len = response->token_len;
-            }
-            if (response_buffer) {
-              memcpy(response_buffer->token, response->token,
-                     response->token_len);
-              response_buffer->token_len = response->token_len;
-            }
+          if (request_buffer) {
+            memcpy(request_buffer->token, response->token, response->token_len);
+            request_buffer->token_len = response->token_len;
+          }
+          if (response_buffer) {
+            memcpy(response_buffer->token, response->token,
+                   response->token_len);
+            response_buffer->token_len = response->token_len;
+          }
         } else {
           coap_set_token(response, message->token, message->token_len);
         }
@@ -821,10 +820,6 @@ send_message:
         coap_clear_transaction(transaction);
       }
     }
-  } else {
-    coap_send_empty_response(COAP_TYPE_RST, message->mid, message->token, message->token_len,
-                             coap_status_code, &msg->endpoint);
-    return coap_status_code;
   }
 
 #ifdef OC_SECURITY
