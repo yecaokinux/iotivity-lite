@@ -22,7 +22,7 @@
 /**
   \mainpage IoTivity-Lite API
 
-  The file \link oc_api.h\endlink is the main entry for all
+  The file \link oc_api.h \endlink is the main entry for all
   server and client related OCF functions.
 */
 
@@ -1218,6 +1218,10 @@ bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
 */
 void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
 
+/**
+ * Set a time delayed callback
+ * @param data
+ */
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
 void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
