@@ -96,26 +96,16 @@ get_wk_introspection(oc_client_response_t *data)
           size_t url_str_len = oc_string_len(rep_item->name);
           if (strncmp("url", url_str, url_str_len) == 0) {
             oc_string_t path;
-#if 0
-            (void) introspection_data_server;
-            if (oc_endpoint_string_parse_path(&rep_item->value.string, &path) == 0) {
-              strncpy(introspection_data_uri, oc_string(path), MAX_URI_LENGTH);
-              introspection_data_uri[MAX_URI_LENGTH - 1] = '\0';
-            } else {
-              introspection_data_uri[0] = '\0';
-            }
-            printf("Calling GET on %s\n", introspection_data_uri);
-            oc_do_get(introspection_data_uri, &wk_introspection_server, NULL, &get_introspection_data, LOW_QOS, NULL);
-#endif
-#if 1
+
+            // convert the url to an endpoint.
             oc_string_to_endpoint(&rep_item->value.string,
                                   &introspection_data_server, &path);
             strncpy(introspection_data_uri, oc_string(path), MAX_URI_LENGTH);
             introspection_data_uri[MAX_URI_LENGTH - 1] = '\0';
+
             printf("Calling GET on %s\n", introspection_data_uri);
             oc_do_get(introspection_data_uri, &introspection_data_server, NULL,
                       &get_introspection_data, LOW_QOS, NULL);
-#endif
           }
           rep_item = rep_item->next;
         }
@@ -208,6 +198,7 @@ main(void)
 
   oc_clock_time_t next_event;
 
+  // set at 18K may need to be increased if server contains a large IDD.
   oc_set_max_app_data_size(18432);
 #ifdef OC_STORAGE
   oc_storage_config("./introspectionclient_creds");
