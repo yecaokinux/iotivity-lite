@@ -30,8 +30,10 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("Apple", NULL, NULL);
+  printf("\tPlatform initialized.\n");
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
+  printf("\tDevice initialized.\n");
   return ret;
 }
 
@@ -62,7 +64,17 @@ get_introspection_data(oc_client_response_t *data)
     oc_rep_t *rep = data->payload;
     print_rep(rep, true);
   } else {
-    printf("\tERROR status: %d\n", data->code);
+    switch (data->code) {
+    case OC_STATUS_UNAUTHORIZED:
+      printf("\tERROR Unauthorized access check permissions.\n");
+      break;
+    case OC_STATUS_INTERNAL_SERVER_ERROR:
+      printf("\tERROR Internal Server Error\n"
+             "\t\tcheck the max app data size of the server.\n");
+      break;
+    default:
+      printf("\tERROR status: %d\n", data->code);
+    }
   }
 }
 
@@ -133,6 +145,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 20 && strncmp(t, "oic.wk.introspection", 20) == 0) {
+      printf("Found oic.wk.introspection resource.\n");
       oc_endpoint_copy(&wk_introspection_server, endpoint);
       strncpy(wk_introspection_uri, uri, uri_len);
       wk_introspection_uri[uri_len] = '\0';
@@ -158,6 +171,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
+  printf(
+    "Making ip discovery request for OCF 'oic.wk.introspection' resource.\n");
   oc_do_ip_discovery("oic.wk.introspection", &discovery, NULL);
 }
 
@@ -193,11 +208,11 @@ main(void)
 
   oc_clock_time_t next_event;
 
-  oc_set_max_app_data_size(262144);
+  oc_set_max_app_data_size(18432);
 #ifdef OC_STORAGE
-  oc_storage_config("./simpleclient_creds");
+  oc_storage_config("./introspectionclient_creds");
 #endif /* OC_STORAGE */
-
+  printf("Initilizing the introspection client...\n");
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
