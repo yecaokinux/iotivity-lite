@@ -423,7 +423,7 @@ TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
  * @PreCondition: N/A
  * @PostCondition: N/A
  */
-TEST_F(TestCoapSignal, SignalGetAltAddrTest_N)
+TEST_F(TestCoapSignal, DISABLED_SignalGetAltAddrTest_N)
 {
     coap_packet_t packet[1];
 
