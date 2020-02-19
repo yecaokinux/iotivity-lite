@@ -9,8 +9,8 @@ Linux_Secured:
     - export VERBOSE=false
     - export CCACHE_DISABLE=false
   script:
-    - cd tests
-    - ./auto_build.sh linux
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
 Linux_Secured_Test:
   stage: build
   before_script:
@@ -19,8 +19,8 @@ Linux_Secured_Test:
     - export VERBOSE=false
     - export CCACHE_DISABLE=false
   script:
-    - cd tests
-    - ./auto_build.sh linux_test
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
 Linux_Unsecured:
   stage: build
   before_script:
@@ -29,8 +29,8 @@ Linux_Unsecured:
     - export VERBOSE=false
     - export CCACHE_DISABLE=false
   script:
-    - cd tests
-    - ./auto_build.sh linux_unsecured
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
 Linux_Unsecured_Test:
   stage: build
   before_script:
@@ -39,5 +39,6 @@ Linux_Unsecured_Test:
     - export VERBOSE=false
     - export CCACHE_DISABLE=false
   script:
-    - cd tests
-    - ./auto_build.sh linux_unsecured_test
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
+
