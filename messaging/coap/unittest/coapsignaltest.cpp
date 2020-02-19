@@ -425,7 +425,7 @@ TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetAltAddrTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     size_t isFailure = coap_signal_get_alt_addr(packet, NULL);
 
