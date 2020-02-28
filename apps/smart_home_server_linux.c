@@ -23,7 +23,6 @@
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
-#include "smart_home_server_linux_IDD.h"
 #endif
 
 static pthread_mutex_t mutex;
@@ -74,9 +73,28 @@ app_init(void)
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   printf("\tSwitch device added.\n");
 #if defined(OC_IDD_API)
-  oc_set_introspection_data(0, smart_home_introspection_data,
-                            smart_home_introspection_data_size);
-  printf("\tIntrospection data set for device.\n");
+  FILE *fp;
+  uint8_t *buffer;
+  size_t buffer_size;
+
+  fp = fopen("./smart_home_server_linux_IDD.cbor", "rb");
+  if (fp) {
+    fseek(fp, 0, SEEK_END);
+    buffer_size = ftell(fp);
+    rewind(fp);
+
+    buffer = (uint8_t *)malloc(buffer_size *
+                               sizeof(uint8_t)); // Enough memory for the file
+    fread(buffer, buffer_size, 1, fp);           // Read in the entire file
+    fclose(fp);                                  // Close the file
+
+    oc_set_introspection_data(0, buffer, buffer_size);
+    printf("\tIntrospection data set for device.\n");
+    free(buffer);
+  } else {
+    printf("\tERROR Could not read smart_home_server_linux_IDD.cbor\n");
+    printf("\tIntrospection data not set for device.\n");
+  }
 #endif
 
   if (err >= 0) {

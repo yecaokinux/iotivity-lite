@@ -260,6 +260,9 @@ copy_pki_certs:
 	@mkdir -p pki_certs
 	@cp ../../apps/pki_certs/*.pem pki_certs/
 
+copy_idd_files:
+	@cp ../../apps/smart_home_server_linux_IDD.cbor .
+
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
@@ -350,7 +353,7 @@ client_block_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_block_linu
 server_block_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs
+smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs copy_idd_files
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
