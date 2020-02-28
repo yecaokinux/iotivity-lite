@@ -11,10 +11,10 @@ Linux_Secured:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
-    - ./apitest
-    - ./ messagingtest
-    - ./platformtest
-    - ./securitytest
+    - LD_LIBRARY_PATH=./ ./apitest
+    - LD_LIBRARY_PATH=./ ./messagingtest
+    - LD_LIBRARY_PATH=./ ./platformtest
+    - LD_LIBRARY_PATH=./ ./securitytest
 
 .Linux_Secured_Test:
   stage: build
@@ -37,10 +37,10 @@ Linux_Unsecured:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
-    - ./apitest
-    - ./ messagingtest
-    - ./platformtest
-    - ./securitytest
+    - LD_LIBRARY_PATH=./ ./apitest
+    - LD_LIBRARY_PATH=./ ./messagingtest
+    - LD_LIBRARY_PATH=./ ./platformtest
+    - LD_LIBRARY_PATH=./ ./securitytest
 
 .Linux_Unsecured_Test:
   stage: build
