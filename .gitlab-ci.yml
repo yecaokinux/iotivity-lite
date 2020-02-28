@@ -1,7 +1,7 @@
 ---
 image: gcc
 
-.Linux_Secured:
+Linux_Secured:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -11,8 +11,12 @@ image: gcc
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
+    - ./apitest
+    - ./ messagingtest
+    - ./platformtest
+    - ./securitytest
 
-Linux_Secured_Test:
+.Linux_Secured_Test:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -23,7 +27,7 @@ Linux_Secured_Test:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
 
-.Linux_Unsecured:
+Linux_Unsecured:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -33,8 +37,12 @@ Linux_Secured_Test:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
+    - ./apitest
+    - ./ messagingtest
+    - ./platformtest
+    - ./securitytest
 
-Linux_Unsecured_Test:
+.Linux_Unsecured_Test:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
