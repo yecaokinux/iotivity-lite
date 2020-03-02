@@ -1,21 +1,6 @@
 ---
 image: gcc
 
-.Linux_Secured:
-  stage: build
-  before_script:
-    - apt update && apt -y install make autoconf
-    - set -o pipefail
-    - export VERBOSE=false
-    - export CCACHE_DISABLE=false
-  script:
-    - cd port/linux
-    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
-    - LD_LIBRARY_PATH=./ ./apitest
-    - LD_LIBRARY_PATH=./ ./messagingtest
-    - LD_LIBRARY_PATH=./ ./platformtest
-    - LD_LIBRARY_PATH=./ ./securitytest
-
 Linux_Secured_Test:
   stage: build
   before_script:
@@ -26,21 +11,6 @@ Linux_Secured_Test:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
-
-.Linux_Unsecured:
-  stage: build
-  before_script:
-    - apt update && apt -y install make autoconf
-    - set -o pipefail
-    - export VERBOSE=false
-    - export CCACHE_DISABLE=false
-  script:
-    - cd port/linux
-    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
-    - LD_LIBRARY_PATH=./ ./apitest
-    - LD_LIBRARY_PATH=./ ./messagingtest
-    - LD_LIBRARY_PATH=./ ./platformtest
-    - LD_LIBRARY_PATH=./ ./securitytest
 
 Linux_Unsecured_Test:
   stage: build

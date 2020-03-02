@@ -209,7 +209,7 @@ PC = iotivity-lite-client.pc iotivity-lite-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(UNIT_TESTS) $(SWIG)
 
-test: $(UNIT_TESTS) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(SWIG)
+test: all
 	./apitest
 	./messagingtest
 	./platformtest
