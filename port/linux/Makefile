@@ -210,10 +210,10 @@ PC = iotivity-lite-client.pc iotivity-lite-server.pc \
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(UNIT_TESTS) $(SWIG)
 
 test: all
-	./apitest
-	./messagingtest
-	./platformtest
-	./securitytest
+	LD_LIBRARY_PATH=./ ./apitest
+	LD_LIBRARY_PATH=./ ./messagingtest
+	LD_LIBRARY_PATH=./ ./platformtest
+	LD_LIBRARY_PATH=./ ./securitytest
 
 .PHONY: test clean
 
