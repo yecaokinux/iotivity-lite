@@ -76,6 +76,6 @@ TEST_F(TestStorage, oc_storage_write)
     EXPECT_LE(0, ret);
     ret = oc_storage_read(file_name, buf, 100);
     EXPECT_LE(0, ret);
-    EXPECT_STREQ(str, buf);
+    EXPECT_STREQ((const char *)str, (const char *)buf);
 }
 #endif /* OC_SECURITY */

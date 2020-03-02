@@ -1,7 +1,7 @@
 ---
 image: gcc
 
-Linux_Secured:
+.Linux_Secured:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -16,7 +16,7 @@ Linux_Secured:
     - LD_LIBRARY_PATH=./ ./platformtest
     - LD_LIBRARY_PATH=./ ./securitytest
 
-.Linux_Secured_Test:
+Linux_Secured_Test:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -27,7 +27,7 @@ Linux_Secured:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
 
-Linux_Unsecured:
+.Linux_Unsecured:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -42,7 +42,7 @@ Linux_Unsecured:
     - LD_LIBRARY_PATH=./ ./platformtest
     - LD_LIBRARY_PATH=./ ./securitytest
 
-.Linux_Unsecured_Test:
+Linux_Unsecured_Test:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
