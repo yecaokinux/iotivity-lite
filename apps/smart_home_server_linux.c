@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
 #include <pthread.h>
@@ -706,6 +707,16 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_device_info_t *device_info =  oc_core_get_device_info(0);
+  oc_uuid_to_str(&device_info->di, buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 int
 main(void)
 {
@@ -744,6 +755,7 @@ main(void)
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+  display_device_uuid();
   PRINT("Waiting for Client...\n");
   PRINT("Hit 'Enter' at any time to toggle switch resource\n");
   while (quit != 1) {
