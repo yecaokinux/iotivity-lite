@@ -106,6 +106,7 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
     snprintf(&buffer[j], 3, "%02x", uuid->id[i]);
     j += 2;
   }
+  buffer[OC_UUID_LEN - 1] = '\0';
 }
 
 void
