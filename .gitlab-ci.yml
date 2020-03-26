@@ -1,6 +1,8 @@
 ---
 image: gcc
-
+stages:
+  - build
+  
 Linux_Secured_Test:
   stage: build
   before_script:
