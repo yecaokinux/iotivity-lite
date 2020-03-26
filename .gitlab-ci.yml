@@ -60,3 +60,4 @@ whitespace_and_doxygen:
     - ./whitespace_commit_checker.sh
     - cd tools
     - ./build_doc.sh
+    
