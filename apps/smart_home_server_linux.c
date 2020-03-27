@@ -711,8 +711,7 @@ void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
-  oc_device_info_t *device_info = oc_core_get_device_info(0);
-  oc_uuid_to_str(&device_info->di, buffer, sizeof(buffer));
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
   PRINT("Started device with ID: %s\n", buffer);
 }
