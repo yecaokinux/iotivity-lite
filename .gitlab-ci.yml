@@ -1,7 +1,7 @@
 ---
 image: gcc
 
-Linux_Secured_Test:
+.Linux_Secured_Test:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
@@ -24,8 +24,8 @@ Linux_Unsecured_Test:
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
   cache:
     paths:
-      - deps/
-Android_build:
+      - cache/
+.Android_build:
     stage: build
     image: openjdk:8-jdk
     before_script:
@@ -48,7 +48,7 @@ Android_build:
       - cd port/android
       - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
 
-whitespace_and_doxygen:
+.whitespace_and_doxygen:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf doxygen clang-format
