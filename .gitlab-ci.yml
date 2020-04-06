@@ -18,7 +18,7 @@ Linux_Unsecured_Test:
     - apt update && apt -y install make autoconf
     - set -o pipefail
     - export VERBOSE=false
-    - export CCACHE_DISABLE=false
+    - export CCACHE_DISABLE=true
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
