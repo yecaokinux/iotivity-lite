@@ -18,13 +18,14 @@ Linux_Unsecured_Test:
     - apt update && apt -y install make autoconf
     - set -o pipefail
     - export VERBOSE=false
-    - export CCACHE_DISABLE=true
+    - export CCACHE_DISABLE=false
+  cache:
+    paths:
+      - deps/
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
-  cache:
-    paths:
-      - cache/
+
 .Android_build:
     stage: build
     image: openjdk:8-jdk
