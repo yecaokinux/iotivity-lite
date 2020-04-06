@@ -20,8 +20,11 @@ Linux_Unsecured_Test:
     - export VERBOSE=false
     - export CCACHE_DISABLE=false
   cache:
+    key:
+      files:
+        - cborencoder.c
     paths:
-      - deps/
+      - deps/tinycbor/src/
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
