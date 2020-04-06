@@ -22,7 +22,9 @@ Linux_Unsecured_Test:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
-
+  cache:
+    paths:
+      - deps/
 Android_build:
     stage: build
     image: openjdk:8-jdk
