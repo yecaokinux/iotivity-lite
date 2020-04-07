@@ -1,6 +1,9 @@
 ---
 image: gcc
 
+variables:
+  GIT_SUBMODULE_STRATEGY: normal
+
 .Linux_Secured_Test:
   stage: build
   before_script:
