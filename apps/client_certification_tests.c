@@ -16,10 +16,10 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_obt.h"
-#include "port/oc_clock.h"
-#include "oc_pki.h"
 #include "oc_introspection.h"
+#include "oc_obt.h"
+#include "oc_pki.h"
+#include "port/oc_clock.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -147,14 +147,15 @@ display_menu(void)
   PRINT("\nSelect option: \n");
 }
 
-static resource_t*
-get_discovered_resource_by_uri(char* uri){
+static resource_t *
+get_discovered_resource_by_uri(char *uri)
+{
   resource_t *resource = (resource_t *)oc_list_head(resources);
   while (resource != NULL) {
-      if (strcmp(resource->uri, uri) == 0) {
-        return resource;
-      }
-      resource = resource->next;
+    if (strcmp(resource->uri, uri) == 0) {
+      return resource;
+    }
+    resource = resource->next;
   }
 
   return NULL;
@@ -619,8 +620,8 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  (void) status;
-  (void) data;
+  (void)status;
+  (void)data;
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
@@ -684,7 +685,8 @@ post_cloud_configuration_resource(bool tcp)
 {
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
-    resource_t *cloudconf_resource = get_discovered_resource_by_uri("/CoAPCloudConf");
+    resource_t *cloudconf_resource =
+      get_discovered_resource_by_uri("/CoAPCloudConf");
     if (cloudconf_resource) {
       char cis_value[1000];
       char sid_value[1000];
@@ -697,7 +699,7 @@ post_cloud_configuration_resource(bool tcp)
         ep = ep->next;
       }
       if (oc_init_post(cloudconf_resource->uri, ep, NULL, &POST_handler,
-                        HIGH_QOS, NULL)) {
+                       HIGH_QOS, NULL)) {
         oc_rep_start_root_object();
         oc_rep_set_text_string(root, cis, cis_value);
         oc_rep_set_text_string(root, sid, sid_value);
