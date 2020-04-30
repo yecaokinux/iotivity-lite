@@ -138,8 +138,10 @@ display_menu(void)
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("-----------------------------------------------\n");
+#ifdef OC_SECURITY
   PRINT("[10] Discover un-owned devices\n");
   PRINT("[11] Just-Works Ownership Transfer Method\n");
+#endif /* OC_SECURITY */
   PRINT("[12] POST cloud configuration UDP\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
@@ -541,6 +543,7 @@ factory_presets_cb(size_t device, void *data)
 }
 
 /* App utility functions */
+#ifdef OC_SECURITY
 static device_handle_t *
 is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 {
@@ -679,6 +682,7 @@ otm_just_works(void)
 
   pthread_mutex_unlock(&app_sync_lock);
 }
+#endif /* OC_SECURITY */
 
 static void
 post_cloud_configuration_resource(bool tcp)
@@ -798,12 +802,14 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
+#ifdef OC_SECURITY
     case 10:
       oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
       break;
     case 11:
       otm_just_works();
       break;
+#endif /* OC_SECURITY */
     case 12:
       post_cloud_configuration_resource(false);
       break;
