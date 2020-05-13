@@ -14,8 +14,9 @@
 // limitations under the License.
 */
 /**
-  @file
-*/
+ * @file
+ * Collection of functions to on board and provision clients and servers
+ */
 #ifndef OC_OBT_H
 #define OC_OBT_H
 
@@ -30,27 +31,287 @@ extern "C"
 {
 #endif
 
-typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *, oc_endpoint_t *, void *);
+/**
+ * The amount of time the stack will wait for a response from a discovery
+ * request.
+ */
+#define DISCOVERY_CB_PERIOD (60)
+
+/**
+ * Callback invoked in response to device discovery.
+ *
+ * Example:
+ * ```
+ * static void
+ * get_device(oc_client_response_t *data)
+ * {
+ *   oc_rep_t *rep = data->payload;
+ *   char *di = NULL, *n = NULL;
+ *   size_t di_len = 0, n_len = 0;
+ *
+ *   if (oc_rep_get_string(rep, "di", &di, &di_len)) {
+ *     printf("Device id: %s\n", di);
+ *   }
+ *   if (oc_rep_get_string(rep, "n", &n, &n_len)) {
+ *     printf("Device name: %s\n", n);
+ *   }
+ * }
+ *
+ * static void
+ * unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+ * {
+ *   (void)data;
+ *   char di[37];
+ *   oc_uuid_to_str(uuid, di, 37);
+ *   oc_endpoint_t *ep = eps;
+ *
+ *   printf("\nDiscovered unowned device: %s at:\n", di);
+ *   while (eps != NULL) {
+ *     PRINTipaddr(*eps);
+ *     printf("\n");
+ *     eps = eps->next;
+ *   }
+ *
+ *   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, NULL);
+ * }
+ *
+ * oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+ * ```
+ * @param[in] uuid the uuid of the discovered device
+ * @param[in] eps list of endpoints that can be used to connect with the
+ *                discovered device
+ * @param[in] data context pointer
+ *
+ * @see oc_obt_discover_unowned_devices
+ * @see oc_obt_discover_unowned_devices_realm_local_ipv6
+ * @see oc_obt_discover_unowned_devices_site_local_ipv6
+ * @see oc_obt_discover_owned_devices
+ * @see oc_obt_discover_owned_devices_realm_local_ipv6
+ * @see oc_obt_discover_owned_devices_site_local_ipv6
+ */
+typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *uuid, oc_endpoint_t *eps,
+                                      void *data);
 typedef void (*oc_obt_device_status_cb_t)(oc_uuid_t *, int, void *);
 typedef void (*oc_obt_status_cb_t)(int, void *);
 
-/* Call once at startup for OBT initialization */
+/**
+ * Initialize the IoTivity stack so it can be used as an onboarding tool (OBT)
+ *
+ * Call once at startup for OBT initialization
+ *
+ * Persistent storage must be initialized before calling oc_obt_init()
+ *
+ * example:
+ * ```
+ * static int
+ *  app_init(void)
+ *  {
+ *    int ret = oc_init_platform("OCF", NULL, NULL);
+ *    ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.0.5",
+ *                         "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
+ *    oc_device_bind_resource_type(0, "oic.d.ams");
+ *    oc_device_bind_resource_type(0, "oic.d.cms");
+ *    return ret;
+ *  }
+ *
+ * static void
+ * issue_requests(void)
+ * {
+ *   oc_obt_init();
+ * }
+ *
+ * static void
+ * signal_event_loop(void)
+ * {
+ *   // code not shown
+ * }
+ * static const oc_handler_t handler = { .init = app_init,
+ *                                       .signal_event_loop = signal_event_loop,
+ *                                       .requests_entry = issue_requests };
+ *
+ * #ifdef OC_STORAGE
+ *   oc_storage_config("./onboarding_tool_creds");
+ * #endif // OC_STORAGE
+ *   if (oc_main_init(&handler) < 0)
+ *     return init;
+ * ```
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_init(void);
-/* Called when the OBT terminates to free all resources */
+
+/**
+ * Free all resources associated with the onboarding tool
+ *
+ * Called when the OBT terminates.
+ */
 void oc_obt_shutdown(void);
 
 /* Device discovery */
+/**
+ * Discover all unowned devices
+ *
+ * The discovery request will make a muli-cast request to the IPv6 link-local
+ * multicast address scope and over IPv4.
+ *
+ * Multicast discovery over IPv4 will only happen if the stack is built with
+ * the OC_IPV4 build flag.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after the
+ *                 oc_obt_discover_unowned_devices function returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
+
+/**
+ * Discover all unowned devices using the realm-local address scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 realm-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after
+ *                 oc_obt_discover_unowned_devices returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                      void *data);
+
+/**
+ * Discover all unowned devices using the site-local address scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 site-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after
+ *                 oc_obt_discover_unowned_devices returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                                     void *data);
+
+/**
+ * Discover all devices owned by the onboarding tool
+ *
+ * The discovery request will make a muli-cast request to the IPv6 link-local
+ * multicast address scope and over IPv4.
+ *
+ * Multicast discovery over IPv4 will only happen if the stack is built with
+ * the OC_IPV4 build flag.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after
+ *                 oc_obt_discover_unowned_devices returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data);
+
+/**
+ * Discover all devices owned by the onboarding tool
+ * using the realm-local address scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 realm-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after
+ *                 oc_obt_discover_unowned_devices returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                    void *data);
+
+/**
+ * Discover all devices owned by the onboarding tool
+ * using the site-local address scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 site-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] cb the oc_obt_discovery_cb_t that will be called for each
+ *               discovered device
+ * @param[in] data context pointer that is passed to the oc_obt_discovery_cb_t
+ *                 the pointer must be a valid pointer till after oc_main_init()
+ *                 call completes. The context pointer must be valid for
+ *                 DISCOVERY_CB_PERIOD seconds after
+ *                 oc_obt_discover_unowned_devices returns.
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                                   void *data);
-
+/**
+ * Discover all resources on the device identified by its uuid.
+ *
+ * @param[in] uuid the uuid of the device the resources are being discovered on
+ * @param[in] handler the oc_discovery_all_handler_t invoked in responce to this
+ *                    discovery request
+ * @param[in] data context pointer that is passed to the
+ *                 oc_discovery_all_handler_t callback function. The pointer
+ *                 must remain valid till the `more` parameter of the
+ *                 oc_discovery_all_handler_t invoked in response to this
+ *                 discover request is false.
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_discover_all_resources(oc_uuid_t *uuid,
                                   oc_discovery_all_handler_t handler,
                                   void *data);
