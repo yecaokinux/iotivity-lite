@@ -15,7 +15,7 @@
 */
 /**
  * @file
- * Collection of functions to on board and provision clients and servers
+ * Collection of functions to onboard and provision clients and servers
  */
 #ifndef OC_OBT_H
 #define OC_OBT_H
@@ -61,8 +61,8 @@ extern "C"
  * unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
  * {
  *   (void)data;
- *   char di[37];
- *   oc_uuid_to_str(uuid, di, 37);
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
  *   oc_endpoint_t *ep = eps;
  *
  *   printf("\nDiscovered unowned device: %s at:\n", di);
@@ -91,8 +91,43 @@ extern "C"
  */
 typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *uuid, oc_endpoint_t *eps,
                                       void *data);
-typedef void (*oc_obt_device_status_cb_t)(oc_uuid_t *, int, void *);
-typedef void (*oc_obt_status_cb_t)(int, void *);
+
+/**
+ * Callback invoked to report the status resulting from many of the onboarding
+ * tools actions on a device.
+ *
+ * @param[in] uuid of the device status is being reported on
+ * @param[in] status number indicating success or failure of action that invoked
+ *                   this callback. Typically `status >= 0` indicates success
+ * @param[in] data context pointer
+ *
+ * @see oc_obt_perform_just_works_otm
+ * @see oc_obt_request_random_pin
+ * @see oc_obt_perform_random_pin_otm
+ * @see oc_obt_perform_cert_otm
+ * @see oc_obt_device_hard_reset
+ * @see oc_obt_provition_ace
+ * @see oc_obt_provision_role_wilecard_ace
+ * @see oc_obt_provision_auth_wildcard_ace
+ */
+typedef void (*oc_obt_device_status_cb_t)(oc_uuid_t *uuid, int status,
+                                          void *data);
+
+/**
+ * Callback invoked to report the status resulting from many of the onboarding
+ * tools actions.
+ *
+ * @param[in] status number indicating success or failure of action that invoked
+ *                   this callback. Typically `status >= 0` indicates success
+ * @param[in] data context pointer
+ *
+ * @see oc_obt_provision_pairwise_credentials
+ * @see oc_obt_provision_identity_certificate
+ * @see oc_obt_provision_role_certificate
+ * @see oc_obt_delete_cred_by_credid
+ * @see oc_obt_delete_ace_by_aceid
+ */
+typedef void (*oc_obt_status_cb_t)(int status, void *data);
 
 /**
  * Initialize the IoTivity stack so it can be used as an onboarding tool (OBT)
@@ -316,33 +351,380 @@ int oc_obt_discover_all_resources(oc_uuid_t *uuid,
                                   oc_discovery_all_handler_t handler,
                                   void *data);
 /* Perform ownership transfer */
+/**
+ * Perform ownership transfer method (OTM) on the device using Just-Works
+ *
+ * Just-Works OTM creates a symmetric key credential that is a pre-shared key
+ * used to establish a secure connection.
+ *
+ * OTM using this method is subject to a man-in-the-middle attacker. This method
+ * assumes onboarding happens in a relatively safe environment absent of an
+ * attack device.
+ *
+ * Example:
+ * ```
+ * static void
+ * otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *
+ *   if (status >= 0) {
+ *     printf("Successfully performed OTM on device with UUID %s\n", di);
+ *   } else {
+ *     printf("ERROR performing ownership transfer on device %s\n", di);
+ *   }
+ * }
+ *
+ * int ret = oc_obt_perform_just_works_otm(uuid, otm_just_works_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to perform ownership transfer\n");
+ * } else {
+ *   printf("ERROR issuing request to perform ownership transfer\n");
+ * }
+ * ```
+ *
+ * @param[in] uuid the uuid of the device the OTM is being run on. The uuid is
+ *                 typically obtained in response to an
+ *                 oc_obt_discover_unowned_devices* call.
+ * @param[in] cb callback invoked to indicate the success or failure of the OTM
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_device_status_cb_t. The pointer must remain valid till
+ *                 the end of the oc_obt_device_status_cb_t function.
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);
+
+/**
+ * Ask device being onboarded to produce a random PIN for PIN ownership transfer
+ * method (OTM).
+ *
+ * This will cause the oc_random_pin_cb_t to be invoked on the remote device.
+ * The remote device is expected to generate and communicate a random PIN using
+ * an Out-of-Band communication channel. For example display the pin on a screen
+ * that the user can read. The Out-of-band communication is an implementation
+ * detail that is left up to the developer.
+ *
+ * The Random PIN establishes physical proximity between the new device and the
+ * onboarding tool (OBT).
+ *
+ * * @param[in] uuid the uuid of the device the oc_random_pin_cb_t is being run
+ *                 on. The uuid is typically obtained in response to an
+ *                 oc_obt_discover_unowned_devices* call
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               random PIN request
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_device_status_cb_t. The pointer must remain valid till
+ *                 the end of the oc_obt_device_status_cb_t function
+ *
+ * @see oc_set_random_pin_callback
+ * @see oc_random_pin_cb_t
+ * @see oc_obt_perform_random_pin_otm
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ *
+ * @see oc_obt_perform_random_pin_otm
+ * @see oc_obt_device_status_cb_t
+ * @see oc_set_random_pin_callback
+ * @see oc_random_pin_cb_t
+ */
 int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                               void *data);
+
+/**
+ * Perform ownership transfer method (OTM) using Random PIN based OTM
+ *
+ * Since the Random PIN establishes physical proximity between the new device
+ * and the onboarding tool (OBT) it helps prevent man-in-the-middle attacks.
+ *
+ * Example:
+ * ```
+ * static void
+ * otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *
+ *   if (status >= 0) {
+ *     printf("Successfully performed OTM on device %s\n", di);
+ *   } else {
+ *     printf("ERROR performing ownership transfer on device %s\n", di);
+ *   }
+ * }
+ *
+ * static void
+ * random_pin_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *
+ *   if (status >= 0) {
+ *     printf("Successfully requested device %s to generate a Random PIN\n",
+ * di);
+ *
+ *     printf("Enter Random PIN: ");
+ *     unsigned char pin[24];
+ *     if ("%10s", pin) <= 0) {
+ *       printf("Error Invalid input\n");
+ *     }
+ *     size_t pin_len = strlen((const char *)pin);
+ *     int ret = oc_obt_perform_random_pin_otm(uuid, pin, pin_len, otm_rdp_cb,
+ *                                             NULL);
+ *   if (ret >= 0) {
+ *     printf("Successfully issued request to perform Random PIN OTM\n");
+ *   } else {
+ *     printf("ERROR issuing request to perform Random PIN OTM\n");
+ *   }
+ *   } else {
+ *     printf("ERROR requesting device %s to generate a Random PIN\n", di);
+ *   }
+ * }
+ *
+ * int ret = oc_obt_request_random_pin(uuid, random_pin_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to generate a random PIN\n");
+ * } else {
+ *   printf("ERROR issuing request to generate random PIN\n");
+ * }
+ * ```
+ * @param[in] uuid the device the Random PIN based OTM is being done on
+ * @param[in] pin the PIN obtained from the remote device in response to the
+ *                oc_obt_request_random_pin
+ * @param[in] pin_len the length of the PIN
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               Random PIN OTM operation
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_device_status_cb_t. The pointer must remain valid till
+ *                 the end of the oc_obt_device_status_cb_t function
+ *
+ * @see oc_obt_request_random_pin
+ * @see oc_obt_device_status_cb_t
+ * @see oc_set_random_pin_callback
+ * @see oc_random_pin_cb_t
+ */
 int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
                                   size_t pin_len, oc_obt_device_status_cb_t cb,
                                   void *data);
+
+/**
+ * Perform ownership transfer method (OTM) using Manufacturer Certificate
+ *
+ * The manufacturer certificate-based OTM uses a certificate embedded into the
+ * device by the manufacturer to perform the OTM.
+ *
+ * @param[in] uuid the device to certificate based OTM is being done on
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               Manufacturer Certificate Based OTM
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_device_status_cb_t. The pointer must remain valid till
+ *                 the end of the oc_obt_device_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                             void *data);
 
 /* RESET device state */
+/**
+ * RESET the remote device back to the ready for ownership transfer method
+ * (RFOTM) state.
+ *
+ * Example:
+ * ```
+ * static void
+ * reset_device_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *   if (status >= 0) {
+ *     printf("Successfully performed hard RESET to device %s\n", di);
+ *   } else {
+ *     printf("ERROR performing hard RESET to device %s\n", di);
+ *   }
+ * }
+ *
+ * int ret = oc_obt_device_hard_reset(uuid, reset_device_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to perform hard RESET\n");
+ * } else {
+ *   printf("ERROR issuing request to perform hard RESET\n");
+ * }
+ * ```
+ *
+ * @param[in] uuid the device being reset
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               hard reset action
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_device_status_cb_t. The pointer must remain valid till
+ *                 the end of the oc_obt_device_status_cb_t function
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                              void *data);
 
-/* Provision pair-wise 128-bit pre-shared keys */
+/**
+ * Provision pair-wise 128-bit pre-shared keys
+ *
+ * Example:
+ * ```
+ * static void
+ * provision_credentials_cb(int status, void *data)
+ * {
+ *   if (status >= 0) {
+ *     printf("Successfully provisioned pair-wise credentials\n");
+ *   } else {
+ *     printf("ERROR provisioning pair-wise credentials\n");
+ *   }
+ * }
+ *
+ * int ret = oc_obt_provision_pairwise_credentials(uuid1, uuid2,
+ *                                provision_credentials_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to provision credentials\n");
+ * } else {
+ *   printf("ERROR issuing request to provision credentials\n");
+ * }
+ * ```
+ * @param[in] uuid1 uuid of the first device to pair
+ * @param[in] uuid2 uuid of the second device to pair
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               pairwise credentials provisioning
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
-/* Provision identity certificates */
+/**
+ * Provision identity certificates
+ *
+ * To provision identity certificates the IoTivity stack must be built with
+ * OC_PKI defined.
+ *
+ * Example:
+ * ```
+ * static void
+ * provision_id_cert_cb(int status, void *data)
+ * {
+ *   if (status >= 0) {
+ *     printf("Successfully provisioned identity certificate\n");
+ *   } else {
+ *     printf("ERROR provisioning identity certificate\n");
+ *   }
+ * }
+ *
+ * int ret = oc_obt_provision_identity_certificate(uuid, provision_id_cert_cb,
+ *                                                 NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to provision identity certificate\n");
+ * } else {
+ *   printf("ERROR issuing request to provision identity certificate\n");
+ * }
+ * ```
+ * @param[in] uuid the uuid of the device to provision
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               provisioning
+ * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
+ *                 pointer must remain valid till the end of the
+ *                 oc_obt_status_cb_t function
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
-/* Provision role certificates */
+/**
+ * Provision role certificates
+ *
+ * Example:
+ * ```
+ * static void
+ * provision_role_cert_cb(int status, void *data)
+ * {
+ *   if (status >= 0) {
+ *     printf("Successfully provisioned role certificate\n");
+ *   } else {
+ *     printf("ERROR provisioning role certificate\n");
+ *   }
+ * }
+ *
+ * oc_role_t *roles = NULL;
+ * char *role = "admin";
+ * roles = oc_obt_add_roleid(roles, role, NULL);
+ * int ret = oc_obt_provision_role_certificate(roles, uuid,
+ *                                             provision_role_cert_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("\nSuccessfully issued request to provision role certificate\n");
+ * } else {
+ *   printf("ERROR issuing request to provision role certificate\n");
+ * }
+ * ```
+ *
+ * @param roles the role(s) to provision
+ * @param uuid the uuid of the device to provision
+ * @param cb callback invoked to indicate the success or failure of the
+ *           provisioning
+ * @param data context pointer that is passed to the oc_obt_status_cb_t. The
+ *             pointer must remain valid till the end of the oc_obt_status_cb_t
+ *             function
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see oc_obt_status_cb_t
+ * @see oc_obt_add_roleid
+ * @see oc_obt_free_roleid
+ */
 int oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
                                       oc_obt_status_cb_t cb, void *data);
 
+/**
+ * Build a linked list of roles to provision a role certificate.
+ *
+ * This function will add a single role and that roles authroity to a list of
+ * rules. If the list of rules does not exist this will create a new head of the
+ * list.
+ *
+ * Example:
+ * ```
+ * oc_role_t *roles = NULL;
+ * roles = oc_obt_add_roleid(roles, "admin", NULL);
+ * roles = oc_obt_add_roleid(roles, "user", NULL);
+ * ```
+ *
+ * @param[in] roles head of the oc_role_t linked list. NULL if the list has not
+ *                  yet been created
+ * @param[in] role the role for the role id
+ * @param[in] authority the role authority for the role id. The role authority
+ *                      is optional if no authority is provided pass in NULL
+ *
+ * @return The new head of the oc_role_t list of roles
+ */
 oc_role_t *oc_obt_add_roleid(oc_role_t *roles, const char *role,
                              const char *authority);
+
+/**
+ * Free the oc_role_t list
+ *
+ * @param roles the head of the oc_role_t list
+ */
 void oc_obt_free_roleid(oc_role_t *roles);
 
 /* Provision access-control entries (ace2) */
