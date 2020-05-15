@@ -15,7 +15,10 @@
 */
 /**
  * @file
- * Collection of functions to onboard and provision clients and servers
+ * Collection of functions to onboard and provision clients and servers.
+ *
+ * This collection of functions is intended to be used by an onboarding tool
+ * (OBT)
  */
 #ifndef OC_OBT_H
 #define OC_OBT_H
@@ -635,6 +638,7 @@ int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
  *   printf("ERROR issuing request to provision identity certificate\n");
  * }
  * ```
+ *
  * @param[in] uuid the uuid of the device to provision
  * @param[in] cb callback invoked to indicate the success or failure of the
  *               provisioning
@@ -728,44 +732,382 @@ oc_role_t *oc_obt_add_roleid(oc_role_t *roles, const char *role,
 void oc_obt_free_roleid(oc_role_t *roles);
 
 /* Provision access-control entries (ace2) */
+/**
+ * Create a new Access Control Entry (ACE) for a subject device
+ *
+ * @param[in] uuid the uuid of the subject device
+ *
+ * @return
+ *   - A pointer to a new oc_sec_ace_t with an OC_SUBJECT_UUID subject_type and
+ *     the subject id will be set to the passed in device uuid
+ *   - NULL if unable to allocate a new oc_sec_ace_t
+ *
+ * @see oc_obt_new_ace_for_connection
+ * @see oc_obt_new_ace_for_role
+ * @see oc_obt_ace_add_permission
+ * @see oc_obt_provision_ace
+ */
 oc_sec_ace_t *oc_obt_new_ace_for_subject(oc_uuid_t *uuid);
+
+/**
+ * Create a new Access Control Entry (ACE) for a connection type
+ *
+ * @param[in] conn the connection type for the ACE
+ *
+ * @return
+ *   - A new oc_sec_ace_t with an OC_SUBJECT_CONN subject_type and the conn
+ *     property set to the provided connection type
+ *   - NULL if unable to allocate a new oc_sec_ace_t
+ *
+ * @see oc_obt_new_ace_for_subject
+ * @see oc_obt_new_ace_for_role
+ * @see oc_obt_ace_add_permission
+ * @see oc_obt_provision_ace
+ */
 oc_sec_ace_t *oc_obt_new_ace_for_connection(oc_ace_connection_type_t conn);
+
+/**
+ * Create a new Access Control Entry (ACE) based on a role
+ *
+ * @param[in] role the role for the ACE
+ * @param[in] authority the role authority for the ACE. The role authority
+ *                      is optional if no authority is provided pass in NULL
+ *
+ * @return
+ *   - A new oc_sec_ace_t with an OC_SUBJECT_ROLE subject_type and the role
+ *     property set to the provided role and authority
+ *   - NULL if unable to allocate a new oc_sec_ace_t
+ *
+ * @see oc_obt_new_ace_for_subject
+ * @see oc_obt_new_ace_for_connection
+ * @see oc_obt_ace_add_permission
+ * @see oc_obt_provision_ace
+ */
 oc_sec_ace_t *oc_obt_new_ace_for_role(const char *role, const char *authority);
+
+/**
+ * Create a new ACE resource (`oc_ace_res_t`) and add it to the ACE
+ *
+ * @param[in,out] ace the ACE that the ACE resource will be added to
+ *
+ * @return
+ *   - A new oc_ace_res_t
+ *   - NULL if unable to allocate a new ACE resource
+ *
+ * @see oc_obt_new_ace_for_subject
+ * @see oc_obt_new_ace_for_connection
+ * @see oc_obt_new_ace_for_role
+ * @see oc_obt_ace_resource_set_href
+ * @see oc_obt_ace_resource_set_wc
+ */
 oc_ace_res_t *oc_obt_ace_new_resource(oc_sec_ace_t *ace);
+
+/**
+ * Set the href for the ACE resource
+ *
+ * @param[in,out] resource the ACE resource that the href URL will be added to
+ * @param[in] href the URL being added to the ACE resource
+ */
 void oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href);
+
+/**
+ * Set the wildcard property on the ACE resource
+ *
+ * Provisioning of Device Configuration Resources (DCRs) are not affected by the
+ * wildcard ACE. Only Non-Configuration Resources (NCRs) are affected by the
+ * wildcard resource.
+ *
+ * The following resources are DCRs
+ *  - A Discovery Core Resource
+ *  - A Security Virtual Resource
+ *  - A Wi-Fi Easy Setup Resource (oic.r.easysetup, oic.r.wificonf,
+ * oic.r.devconf)
+ *  - A Software Update Resource (oic.r.softwareupdate)
+ *  - A Maintenance Resource (oic.r.wk.mnt)
+ *
+ * The possible values for oc_ace_wildcard_t are:
+ *  - OC_ACE_NO_WC : no wildcard
+ *  - OC_ACE_WC_ALL : all NCRs "*"
+ *  - OC_ACE_WC_ALL_SECURED : all NCRs that are secure "+"
+ *  - OC_ACE_WC_ALL_PUBLIC : all NCRs that are not secure "-"
+ *
+ * @param[in,out] resource the ACE resource to set the wildcard value on
+ * @param[in] wc the wildcard value
+ */
 void oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc);
+
+/**
+ * Set the access permissions the ACE will have
+ *
+ * The function oc_obt_ace_add_permission can be called multiple times to add
+ * additional permissions.
+ *
+ * calling:
+ * ```
+ * oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+ * oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+ * oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
+ * ```
+ *
+ * will set the same permissions as calling:
+ * ```
+ * oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+ *                                OC_PERM_NOTIFY);
+ * ```
+ *
+ * The possible values for the oc_ace_permissions_t bitmask are:
+ * - OC_PERM_NONE : no permissions. Never expected to show up in an ACE entry
+ * - OC_PERM_CREATE : permission to add a new resource to the client or server
+ * - OC_PERM_RETRIEVE : permission to read the properties of a resource
+ * - OC_PERM_UPDATE : permission to update the writable properties of a resource
+ * - OC_PERM_DELETE : permission to delete a resource on the client or server
+ * - OC_PERM_NOTIFY : permission to see notifications sent by the client or
+ * server
+ *
+ * @param[in,out] ace the ACE the permissions are being added to
+ * @param[in] permission the permissions granted to the `ace`
+ *
+ * @see oc_obt_new_ace_for_subject
+ * @see oc_obt_new_ace_for_connection
+ * @see oc_obt_new_ace_for_role
+ * @see oc_obt_provision_ace
+ */
 void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
                                oc_ace_permissions_t permission);
 
+/**
+ * Add the created ACE to the device being provisioned
+ *
+ * Example:
+ * ```
+ * static void
+ * provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *   if (status >= 0) {
+ *     printf("Successfully provisioned ACE to device %s\n", di);
+ *   } else {
+ *     printf("ERROR provisioning ACE to device %s\n", di);
+ *   }
+ * }
+ *
+ * oc_sec_ace_t *ace = NULL;
+ * ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+ * oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+ *
+ * if (!res) {
+ *   printf("ERROR: Could not allocate new resource for ACE\n");
+ *   oc_obt_free_ace(ace);
+ *   return;
+ * }
+ * oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
+ * oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+ *                                OC_PERM_NOTIFY);
+ * int ret = oc_obt_provision_ace(uuid, ace, provision_ace2_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to provision ACE\n");
+ * } else {
+ *   printf("ERROR issuing request to provision ACE\n");
+ * }
+ * ```
+ *
+ * @param[in] subject the uuid of the device being provisioned
+ * @param[in] ace the ACE being added to the `subject`
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               provisioning
+ * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
+ *                 pointer must remain valid till the end of the
+ *                 oc_obt_status_cb_t function
+ */
 int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
+
+/**
+ * Free the memory associated with the ACE
+ *
+ * @param ace the ACE that will be freed
+ */
 void oc_obt_free_ace(oc_sec_ace_t *ace);
 
-/* Provision role ACE for wildcard "*" resource with RW permissions */
+/**
+ * Provision role ACE for wildcard "*" resource with RW permissions
+ *
+ * This is a helper function to quickly provision a role ACE with wildcard ACE
+ * resource
+ *
+ * @param[in] subject the uuid or the device being provisioned
+ * @param[in] role the role for the ACE
+ * @param[in] authority the role authority for the ACE. The role authority
+ *                      is optional if no authority is provided pass in NULL
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               provisioning
+ * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
+ *                 pointer must remain valid till the end of the
+ *                 oc_obt_status_cb_t function
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see oc_obt_new_ace_for_role
+ * @see oc_obt_ace_new_resource
+ * @see oc_obt_ace_resource_set_wc
+ * @see oc_obt_ace_add_permission
+ * @see oc_obt_provision_ace
+ */
 int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
                                        const char *authority,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
 
-/* Provision auth-crypt ACE for the wildcard "*" resource with RW permissions */
+/**
+ * Provision auth-crypt ACE for the wildcard "*" resource with RW permissions
+ *
+ * This is a helper function to quickly provision a connection type ACE with
+ * wildcard ACE resource
+ *
+ * @param[in] subject the uuid or the device being provisioned
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               provisioning
+ * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
+ *                 pointer must remain valid till the end of the
+ *                 oc_obt_status_cb_t function
+ *
+ * @see oc_obt_new_ace_for_connection
+ * @see oc_obt_ace_new_resource
+ * @see oc_obt_ace_resource_set_wc
+ * @see oc_obt_ace_add_permission
+ * @see oc_obt_provision_ace
+ */
 int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
 
+/**
+ * Retrieve a list of the onboarding tools credentials
+ *
+ * The credentials returned by oc_obt_retrieve_own_creds() point to an internal
+ * data structures that store the security context of the OBT. **DO NOT** free
+ * them. Use oc_obt_delete_own_cred_by_credid() to remove credentials from the
+ * OBT
+ *
+ * @return A struct containing the onboarding tools uuid and a linked list of
+ * oc_sec_cred_t credentials owned by the onboarding tool.
+ */
 oc_sec_creds_t *oc_obt_retrieve_own_creds(void);
+
+/**
+ * Delete a one of the onboarding tools credentials based on the credid
+ *
+ * @param[in] credid number identifying the credential to delete
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_delete_own_cred_by_credid(int credid);
 
-typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *, void *);
+/**
+ * Callback containing the credentials owned by a remote device
+ *
+ * This callback is invoked in response to the oc_obt_retrieve_creds()
+ * function. If there was a failure obtaining the credentials the `creds`
+ * parameter will be NULL.
+ *
+ * @param[in] creds A struct containing a linked list of oc_sec_cred_t
+ *                  credentials owned by a remote device
+ * @param[in] data context pointer
+ *
+ * @see oc_obt_retrieve_creds
+ */
+typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *creds, void *data);
 
+/**
+ * Retrieve a list of credentials from a remote device owned by the onboarding
+ * tool.
+ *
+ * @param[in] subject uuid of the device the credentials will be fetched from
+ * @param[in] cb callback that will contain the list of credentials from the
+ *               remote device
+ * @param[in] data context pointer that is passed to the oc_obt_creds_cb_t. The
+ *                 pointer must remain valid till after the oc_obt_creds_cb_t
+ *                 has completed.
+ */
 int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);
+
+/**
+ * Free a list of credentials
+ *
+ * @param creds the list of credentials to free
+ */
 void oc_obt_free_creds(oc_sec_creds_t *creds);
+
+/**
+ * Delete a credential identified by its credid off a remote device
+ *
+ * @param[in] uuid the uuid of the device the credential is being deleted from
+ * @param[in] credid the credid of the credential being deleted
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               oc_obt_delete_cred_by_credid call
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ */
 int oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
                                  oc_obt_status_cb_t cb, void *data);
 
-typedef void (*oc_obt_acl_cb_t)(oc_sec_acl_t *, void *);
+/**
+ * Callback containing the Access Control List (ACL) owned by a remote device
+ *
+ * This callback is invoked in response to the oc_obt_retrieve_acl()
+ * function. If there was a failure obtaining the ACL the `acl`
+ * parameter will be NULL.
+ *
+ * @param[in] acl A struct containing ACL installed on a remote device
+ * @param[in] data context pointer
+ *
+ * @see oc_obt_retrieve_acl
+ */
+typedef void (*oc_obt_acl_cb_t)(oc_sec_acl_t *acl, void *data);
 
+/**
+ * Retrieve an Access Control List (ACL) from a remote device
+ *
+ * @param[in] uuid the uuid of the remote device
+ * @param[in] cb callback that will deliver the requested ACL
+ * @param[in] data context pointer that is passed to the oc_obt_acl_cb_t. The
+ *                 pointer must remain valid till after the oc_obt_acl_cb_t
+ *                 has completed.
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
 int oc_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data);
+
+/**
+ * Free an Access Control List (ACL)
+ *
+ * This will free all Access Control Entries (ACE) in the ACL as well as the
+ * ACL itself
+ *
+ * @param acl pointer to the head of an ACL
+ */
 void oc_obt_free_acl(oc_sec_acl_t *acl);
+
+/**
+ * Remove an Access Control Entry (ACE) from a remote device's Access Control
+ * List (ACL)
+ *
+ * @param[in] uuid the uuid of the remote device
+ * @param[in] aceid the id of the Access Control Entry
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               ACE delete request
+ * @param[in] data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ */
 int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
 
