@@ -506,6 +506,10 @@ int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  *                 oc_obt_device_status_cb_t. The pointer must remain valid till
  *                 the end of the oc_obt_device_status_cb_t function
  *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ *
  * @see oc_obt_request_random_pin
  * @see oc_obt_device_status_cb_t
  * @see oc_set_random_pin_callback
@@ -919,6 +923,10 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
  * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
  *                 pointer must remain valid till the end of the
  *                 oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  */
 int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
@@ -973,6 +981,10 @@ int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
  * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
  *                 pointer must remain valid till the end of the
  *                 oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  *
  * @see oc_obt_new_ace_for_connection
  * @see oc_obt_ace_new_resource
@@ -1033,6 +1045,10 @@ typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *creds, void *data);
  * @param[in] data context pointer that is passed to the oc_obt_creds_cb_t. The
  *                 pointer must remain valid till after the oc_obt_creds_cb_t
  *                 has completed.
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  */
 int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);
 
@@ -1053,6 +1069,10 @@ void oc_obt_free_creds(oc_sec_creds_t *creds);
  * @param[in] data context pointer that is passed to the
  *                 oc_obt_status_cb_t. The pointer must remain valid till the
  *                 end of the oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  */
 int oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
                                  oc_obt_status_cb_t cb, void *data);
@@ -1107,6 +1127,10 @@ void oc_obt_free_acl(oc_sec_acl_t *acl);
  * @param[in] data context pointer that is passed to the
  *                 oc_obt_status_cb_t. The pointer must remain valid till the
  *                 end of the oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  */
 int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
