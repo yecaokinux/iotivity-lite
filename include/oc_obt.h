@@ -580,7 +580,8 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                              void *data);
 
 /**
- * Provision pair-wise 128-bit pre-shared keys
+ * Provision pair-wise 128-bit pre-shared key (PSK) credentials to a Client
+ * and Server so they may establish a secure (D)TLS session.
  *
  * Example:
  * ```
@@ -658,7 +659,7 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
 /**
- * Provision role certificates
+ * Provision a role certificate to a Client application.
  *
  * Example:
  * ```
@@ -706,9 +707,9 @@ int oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
 /**
  * Build a linked list of roles to provision a role certificate.
  *
- * This function will add a single role and that roles authroity to a list of
- * rules. If the list of rules does not exist this will create a new head of the
- * list.
+ * This function will add a single role (role name and authroity) to a list of
+ * rules. If the provided list of roles is empty, it will create a new list with the
+ * added role.
  *
  * Example:
  * ```
@@ -737,9 +738,9 @@ void oc_obt_free_roleid(oc_role_t *roles);
 
 /* Provision access-control entries (ace2) */
 /**
- * Create a new Access Control Entry (ACE) for a subject device
+ * Create a new Access Control Entry (ACE) with device UUID as subject.
  *
- * @param[in] uuid the uuid of the subject device
+ * @param[in] uuid the uuid of the device
  *
  * @return
  *   - A pointer to a new oc_sec_ace_t with an OC_SUBJECT_UUID subject_type and
@@ -754,7 +755,7 @@ void oc_obt_free_roleid(oc_role_t *roles);
 oc_sec_ace_t *oc_obt_new_ace_for_subject(oc_uuid_t *uuid);
 
 /**
- * Create a new Access Control Entry (ACE) for a connection type
+ * Create a new Access Control Entry (ACE) with connection type as the subject.
  *
  * @param[in] conn the connection type for the ACE
  *
@@ -771,9 +772,9 @@ oc_sec_ace_t *oc_obt_new_ace_for_subject(oc_uuid_t *uuid);
 oc_sec_ace_t *oc_obt_new_ace_for_connection(oc_ace_connection_type_t conn);
 
 /**
- * Create a new Access Control Entry (ACE) based on a role
+ * Create a new Access Control Entry (ACE) with a role as the subject.
  *
- * @param[in] role the role for the ACE
+ * @param[in] role the role associated with the ACE
  * @param[in] authority the role authority for the ACE. The role authority
  *                      is optional if no authority is provided pass in NULL
  *
@@ -790,7 +791,7 @@ oc_sec_ace_t *oc_obt_new_ace_for_connection(oc_ace_connection_type_t conn);
 oc_sec_ace_t *oc_obt_new_ace_for_role(const char *role, const char *authority);
 
 /**
- * Create a new ACE resource (`oc_ace_res_t`) and add it to the ACE
+ * Add an ACE resource (`oc_ace_res_t`) to the ACE.
  *
  * @param[in,out] ace the ACE that the ACE resource will be added to
  *
@@ -807,7 +808,7 @@ oc_sec_ace_t *oc_obt_new_ace_for_role(const char *role, const char *authority);
 oc_ace_res_t *oc_obt_ace_new_resource(oc_sec_ace_t *ace);
 
 /**
- * Set the href for the ACE resource
+ * Set the href on the ACE resource.
  *
  * @param[in,out] resource the ACE resource that the href URL will be added to
  * @param[in] href the URL being added to the ACE resource
@@ -815,7 +816,7 @@ oc_ace_res_t *oc_obt_ace_new_resource(oc_sec_ace_t *ace);
 void oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href);
 
 /**
- * Set the wildcard property on the ACE resource
+ * Set the wildcard type on the ACE resource
  *
  * Provisioning of Device Configuration Resources (DCRs) are not affected by the
  * wildcard ACE. Only Non-Configuration Resources (NCRs) are affected by the
@@ -841,7 +842,7 @@ void oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href);
 void oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc);
 
 /**
- * Set the access permissions the ACE will have
+ * Set the access permissions the ACE will grant.
  *
  * The function oc_obt_ace_add_permission can be called multiple times to add
  * additional permissions.
@@ -880,7 +881,7 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
                                oc_ace_permissions_t permission);
 
 /**
- * Add the created ACE to the device being provisioned
+ * Provision an ACE to a device.
  *
  * Example:
  * ```
@@ -932,17 +933,16 @@ int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
 
 /**
- * Free the memory associated with the ACE
+ * Free the memory associated with the ACE object.
  *
  * @param ace the ACE that will be freed
  */
 void oc_obt_free_ace(oc_sec_ace_t *ace);
 
 /**
- * Provision role ACE for wildcard "*" resource with RW permissions
+ * Provision a role ACE for the wildcard "*" resource with RW permissions.
  *
- * This is a helper function to quickly provision a role ACE with wildcard ACE
- * resource
+ * This is a helper function to quickly provision a role ACE for wildcard access.
  *
  * @param[in] subject the uuid or the device being provisioned
  * @param[in] role the role for the ACE
@@ -970,10 +970,10 @@ int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
                                        void *data);
 
 /**
- * Provision auth-crypt ACE for the wildcard "*" resource with RW permissions
+ * Provision auth-crypt ACE for the wildcard "*" resource with RW permissions.
  *
- * This is a helper function to quickly provision a connection type ACE with
- * wildcard ACE resource
+ * This is a helper function to quickly provision an ACE for wildcard access
+ * over secure connections.
  *
  * @param[in] subject the uuid or the device being provisioned
  * @param[in] cb callback invoked to indicate the success or failure of the
@@ -997,12 +997,12 @@ int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
                                        void *data);
 
 /**
- * Retrieve a list of the onboarding tools credentials
+ * Retrieve a list of the onboarding tools own credentials.
  *
  * The credentials returned by oc_obt_retrieve_own_creds() point to an internal
  * data structures that store the security context of the OBT. **DO NOT** free
  * them. Use oc_obt_delete_own_cred_by_credid() to remove credentials from the
- * OBT
+ * OBT.
  *
  * @return A struct containing the onboarding tools uuid and a linked list of
  * oc_sec_cred_t credentials owned by the onboarding tool.
@@ -1010,7 +1010,7 @@ int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
 oc_sec_creds_t *oc_obt_retrieve_own_creds(void);
 
 /**
- * Delete a one of the onboarding tools credentials based on the credid
+ * Delete a one of the onboarding tools credentials by credid.
  *
  * @param[in] credid number identifying the credential to delete
  *
@@ -1021,7 +1021,7 @@ oc_sec_creds_t *oc_obt_retrieve_own_creds(void);
 int oc_obt_delete_own_cred_by_credid(int credid);
 
 /**
- * Callback containing the credentials owned by a remote device
+ * Callback containing the credentials owned by a remote device.
  *
  * This callback is invoked in response to the oc_obt_retrieve_creds()
  * function. If there was a failure obtaining the credentials the `creds`
@@ -1060,7 +1060,7 @@ int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);
 void oc_obt_free_creds(oc_sec_creds_t *creds);
 
 /**
- * Delete a credential identified by its credid off a remote device
+ * Delete a credential identified by its credid off a remote device.
  *
  * @param[in] uuid the uuid of the device the credential is being deleted from
  * @param[in] credid the credid of the credential being deleted
@@ -1078,10 +1078,10 @@ int oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
                                  oc_obt_status_cb_t cb, void *data);
 
 /**
- * Callback containing the Access Control List (ACL) owned by a remote device
+ * Callback containing the Access Control List (ACL) owned by a remote device.
  *
  * This callback is invoked in response to the oc_obt_retrieve_acl()
- * function. If there was a failure obtaining the ACL the `acl`
+ * function. If there was a failure obtaining the ACL, the `acl`
  * parameter will be NULL.
  *
  * @param[in] acl A struct containing ACL installed on a remote device
