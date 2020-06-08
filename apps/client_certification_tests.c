@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static const size_t DEVICE = 0;
+
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
@@ -144,6 +146,10 @@ display_menu(void)
   PRINT("[11] Just-Works Ownership Transfer Method\n");
 #endif /* OC_SECURITY */
   PRINT("[12] POST cloud configuration UDP\n");
+#ifdef OC_CLOUD
+  PRINT("[20] Send ping message\n");
+  PRINT("-----------------------------------------------\n");
+#endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -304,6 +310,42 @@ GET_handler(oc_client_response_t *data)
 
   display_menu();
 }
+
+#ifdef OC_CLOUD
+static void
+ping_handler(oc_client_response_t *data)
+{
+  (void)data;
+  PRINT("\nReceived Pong\n");
+}
+
+static void
+cloud_send_ping(void)
+{
+  PRINT("\nEnter receiving endpoint: ");
+  char addr[256];
+  SCANF("%255s", addr);
+  char endpoint_string[267];
+  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  oc_string_t ep_string;
+  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_endpoint_t endpoint;
+  int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
+  oc_free_string(&ep_string);
+  if (ret < 0) {
+    PRINT("\nERROR parsing endpoint string\n");
+    return;
+  }
+  pthread_mutex_lock(&app_sync_lock);
+  if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
+    PRINT("\nSuccessfully issued Ping request\n");
+  } else {
+    PRINT("\nERROR issuing Ping request\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+#endif /* OC_CLOUD */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -536,14 +578,14 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
   size_t cert_len = 8192;
-  if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_ee.pem", cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
-  if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_key.pem", key, &key_len) < 0) {
     PRINT("ERROR: unable to read private key");
     return;
   }
@@ -557,7 +599,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -571,7 +614,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -796,6 +840,7 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
+  oc_set_con_res_announced(true);
 #ifdef OC_STORAGE
   oc_storage_config("./client_certification_tests_creds");
 #endif /* OC_STORAGE */
@@ -820,6 +865,9 @@ main(void)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
+  oc_resource_set_observable(con_resource, false);
 
   display_device_uuid();
 
@@ -869,6 +917,11 @@ main(void)
     case 12:
       post_cloud_configuration_resource(false);
       break;
+#ifdef OC_CLOUD
+    case 20:
+      cloud_send_ping();
+      break;
+#endif /* OC_CLOUD */
     case 99:
       handle_signal(0);
       break;
