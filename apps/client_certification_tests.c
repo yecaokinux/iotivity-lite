@@ -146,10 +146,10 @@ display_menu(void)
   PRINT("[11] Just-Works Ownership Transfer Method\n");
 #endif /* OC_SECURITY */
   PRINT("[12] POST cloud configuration UDP\n");
-#ifdef OC_CLOUD
-  PRINT("[20] Send ping message\n");
+#ifdef OC_TCP
+    PRINT("[20] Send ping message\n");
   PRINT("-----------------------------------------------\n");
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -311,7 +311,7 @@ GET_handler(oc_client_response_t *data)
   display_menu();
 }
 
-#ifdef OC_CLOUD
+#ifdef OC_TCP
 static void
 ping_handler(oc_client_response_t *data)
 {
@@ -345,7 +345,7 @@ cloud_send_ping(void)
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -917,11 +917,11 @@ main(void)
     case 12:
       post_cloud_configuration_resource(false);
       break;
-#ifdef OC_CLOUD
+#ifdef OC_TCP
     case 20:
       cloud_send_ping();
       break;
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
     case 99:
       handle_signal(0);
       break;
