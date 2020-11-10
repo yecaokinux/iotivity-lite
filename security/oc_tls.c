@@ -1629,16 +1629,33 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   return true;
 }
 
+static int
+ssl_write(mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len) {
+  size_t length = 0;
+  while (length < len) {
+    int ret = mbedtls_ssl_write(ssl, buf + length,
+                                  len - length);
+    if (ret < 0) {
+      if (ret == MBEDTLS_ERR_SSL_WANT_READ &&
+          ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+        continue;
+      }
+      return ret;
+    }
+    length += ret;
+  }
+  return (int)length;
+}
+
 size_t
 oc_tls_send_message(oc_message_t *message)
 {
   size_t length = 0;
   oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
   if (peer) {
-    int ret = mbedtls_ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
+    int ret = ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
                                 message->length);
-    if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-        ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+    if (ret < 0) {
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
@@ -1663,11 +1680,10 @@ write_application_data(oc_tls_peer_t *peer)
   }
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
   while (message != NULL) {
-    int ret = mbedtls_ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
+    int ret = ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
                                 message->length);
     oc_message_unref(message);
-    if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-        ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+    if (ret < 0) {
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
